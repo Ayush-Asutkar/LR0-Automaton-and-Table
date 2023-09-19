@@ -34,6 +34,12 @@ public class Item {
         return this.rightSide.get(indexOfDotMarker + 1);
     }
 
+    public ProductionRule getCorrespondingProductionRuleForReducingItem() {
+        ProductionRule productionRule = new ProductionRule(this.leftSide);
+        productionRule.addRightHandSide(this.rightSide);
+        return productionRule;
+    }
+
     public Item moveDotMarkerAndReturnItem() {
         if(this.isReductionItem()) {
             System.out.println("Is a reduction item");

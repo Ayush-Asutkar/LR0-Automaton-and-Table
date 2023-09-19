@@ -22,6 +22,22 @@ public class State {
         return Collections.unmodifiableSet(items);
     }
 
+    public boolean isReducingState() {
+        Set<Item> reductionItems = this.getItemsWhichAreReducingItems();
+        return reductionItems.isEmpty();
+    }
+
+    public Set<Item> getItemsWhichAreReducingItems() {
+        Set<Item> result = new HashSet<>();
+        items.forEach((item) -> {
+            if(item.isReductionItem()) {
+                result.add(item);
+            }
+        });
+
+        return result;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
