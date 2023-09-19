@@ -11,7 +11,8 @@ public class LR0Grammar extends Grammar {
      */
     private final Map<State, Map<String, State>> transitions;
     private State initialState;
-    public LR0Grammar(Map<State) {
+
+    public LR0Grammar() {
         super();
         this.transitions = new HashMap<>();
     }
