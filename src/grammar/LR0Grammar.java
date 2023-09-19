@@ -1,6 +1,8 @@
 package grammar;
 
 import model.Item;
+import model.LR0ParseTableElement;
+import model.ProductionRule;
 import model.State;
 
 import java.util.*;
@@ -10,11 +12,15 @@ public class LR0Grammar extends Grammar {
      * Map(State, Map(Symbol, State))
      */
     private final Map<State, Map<String, State>> transitions;
+    private final List<Map<String, LR0ParseTableElement>> parseTable;
     private State initialState;
+    private final Map<State, Integer> stateIndexing;
 
     public LR0Grammar() {
         super();
         this.transitions = new HashMap<>();
+        this.stateIndexing = new HashMap<>();
+        this.parseTable = new ArrayList<>();
     }
 
     private Item findInitialItem() {
@@ -89,43 +95,126 @@ public class LR0Grammar extends Grammar {
         }
     }
 
-    private Map<State, Integer> indexingStates(){
-        Map<State, Integer> result = new HashMap<>();
+    public void computeIndexingOfStates() {
         int ind = 0;
 
-        for(Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
+        this.stateIndexing.put(this.initialState, ind++);
+
+        for (Map.Entry<State, Map<String, State>> mapElem : this.transitions.entrySet()) {
             State fromState = mapElem.getKey();
-            if (!result.containsKey(fromState)) {
-                result.put(fromState, ind++);
+            if (!this.stateIndexing.containsKey(fromState)) {
+                this.stateIndexing.put(fromState, ind++);
             }
 
-            for (Map.Entry<String, State> mapValueElem: mapElem.getValue().entrySet()) {
+            for (Map.Entry<String, State> mapValueElem : mapElem.getValue().entrySet()) {
                 State toState = mapValueElem.getValue();
-                if(!result.containsKey(toState)) {
-                    result.put(toState, ind++);
+                if (!this.stateIndexing.containsKey(toState)) {
+                    this.stateIndexing.put(toState, ind++);
                 }
             }
         }
+    }
 
-        System.out.println("Total States: " + result.size());
-        System.out.println("Indexing of maps:");
-        for(Map.Entry<State, Integer> mapElem: result.entrySet()) {
-            System.out.println(mapElem.getValue() + " :-\n" + mapElem.getKey());
+    private void createEmptyParsingTable() {
+        for(int i=0; i<this.stateIndexing.size(); i++) {
+            Map<String, LR0ParseTableElement> map = new HashMap<>();
+            this.parseTable.add(map);
+        }
+    }
+
+    // for reducing
+    private void addToParseTable(int stateNumber, ProductionRule productionRule, String transitionString) {
+        this.parseTable.get(stateNumber).put(transitionString, new LR0ParseTableElement(LR0ParseTableElement.ElementType.REDUCE, productionRule));
+    }
+
+    // for shifting and goto
+    private void addToParseTable(int stateNumber, int shiftStateNumber, String transitionString, LR0ParseTableElement.ElementType elementType) {
+        this.parseTable.get(stateNumber).put(transitionString, new LR0ParseTableElement(elementType, stateNumber));
+    }
+
+    private boolean parseTableIsNonEmptyForStateAndTransitionString(int stateNumber, String transitionString) {
+        return this.parseTable.get(stateNumber).containsKey(transitionString);
+    }
+
+    public void computeParsingTable() {
+        if(this.transitions.isEmpty()) {
+            System.out.println("Compute the transitions before running this function");
+            System.exit(-1);
         }
 
-        return result;
+        this.createEmptyParsingTable();
+
+        for(Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
+            State fromState = mapElem.getKey();
+            int fromStateInt = this.stateIndexing.get(fromState);
+
+            //check if the fromState is a reducing state
+            if(fromState.isReducingState()) {
+                Set<Item> reducingItems = fromState.getItemsWhichAreReducingItems();
+                if(reducingItems.size() > 1) {
+                    //reduce - reduce conflict
+                    System.out.println("Reduce - Reduce conflict: " + reducingItems);
+                    System.exit(-1);
+                }
+
+                Iterator<Item> iterator = reducingItems.iterator();
+                Item reducingItem = iterator.next();
+
+                ProductionRule productionRuleForItem = reducingItem.getCorrespondingProductionRuleForReducingItem();
+
+                //for all terminal symbols, reduction
+                for(String terminal: super.getTerminalSymbols()) {
+                    this.addToParseTable(fromStateInt, productionRuleForItem, terminal);
+                }
+            }
+
+            for(Map.Entry<String, State> mapValueElem: mapElem.getValue().entrySet()) {
+                String transitionString = mapValueElem.getKey();
+                int toStateInt = this.stateIndexing.get(mapValueElem.getValue());
+
+                if(this.parseTableIsNonEmptyForStateAndTransitionString(fromStateInt, transitionString)) {
+                    //shift - reduce conflict
+                    System.out.println("Shift - Reduce conflict: " + fromStateInt + " state and symbol " + transitionString);
+                    System.exit(-1);
+                }
+
+                if(super.isTerminalSymbol(transitionString)) {
+                    //shift
+                    this.addToParseTable(fromStateInt, toStateInt, transitionString,LR0ParseTableElement.ElementType.SHIFT);
+                } else if (super.isNonTerminalSymbol(transitionString)) {
+                    //goto
+                    this.addToParseTable(fromStateInt, toStateInt, transitionString, LR0ParseTableElement.ElementType.GOTO);
+                }
+            }
+        }
+    }
+
+    public void printIndexingOfStates() {
+        if(this.stateIndexing.isEmpty()) {
+            System.out.println("Compute the indexing before running this function");
+            System.exit(-1);
+        }
+
+        System.out.println("Total States: " + this.stateIndexing.size());
+        System.out.println("Indexing of maps:");
+        for(Map.Entry<State, Integer> mapElem: this.stateIndexing.entrySet()) {
+            System.out.println(mapElem.getValue() + " :-\n" + mapElem.getKey());
+        }
     }
 
     public void printTransitions() {
-        Map<State, Integer> stateIndexing = this.indexingStates();
+        if(this.stateIndexing.isEmpty()) {
+            System.out.println("Compute the indexing before running this function");
+            System.exit(-1);
+        }
 
         for (Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
-            int fromState = stateIndexing.get(mapElem.getKey());
+            int fromState = this.stateIndexing.get(mapElem.getKey());
             Map<String, State> mapValues = mapElem.getValue();
 
             for(Map.Entry<String, State> transitionState: mapValues.entrySet()) {
                 String transitionString = transitionState.getKey();
-                int toState = stateIndexing.get(transitionState.getValue());
+                int toState = this.stateIndexing.get(transitionState.getValue());
 
                 System.out.println("From State: " + fromState);
                 System.out.println("Transition String: " + transitionString);
@@ -135,6 +224,19 @@ public class LR0Grammar extends Grammar {
         }
 
         System.out.println();
+    }
+
+    private int findLengthOfMaxTableElement() {
+        int maxLength = Integer.MIN_VALUE;
+
+        for(int i=0; i<this.parseTable.size(); i++) {
+            Map<String, LR0ParseTableElement> map = this.parseTable.get(i);
+
+            for(LR0ParseTableElement element : map.values()) {
+                maxLength = Math.max(maxLength, element.toString().length());
+            }
+        }
+        return maxLength;
     }
 
     //for testing
@@ -158,6 +260,9 @@ public class LR0Grammar extends Grammar {
         grammar.printGrammar();
 
         grammar.computeTransitions();
+        grammar.computeIndexingOfStates();
+        grammar.printIndexingOfStates();
         grammar.printTransitions();
+//        grammar.printParsingTable();
     }
 }
