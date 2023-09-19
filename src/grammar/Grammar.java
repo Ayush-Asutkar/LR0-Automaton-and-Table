@@ -340,7 +340,7 @@ public class Grammar {
         writer.close();
     }
 
-    private String findNewName(String leftHandSide) {
+    protected String findNewName(String leftHandSide) {
         String newName = leftHandSide + "'";
         boolean notUnique = true;
         while (notUnique) {
