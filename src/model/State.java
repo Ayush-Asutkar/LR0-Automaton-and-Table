@@ -18,6 +18,10 @@ public class State {
         this.items.addAll(closureItems);
     }
 
+    public Set<Item> getItems() {
+        return Collections.unmodifiableSet(items);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
