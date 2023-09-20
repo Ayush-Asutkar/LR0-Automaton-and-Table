@@ -29,6 +29,7 @@ public class LR0Grammar extends Grammar {
 
         List<String> rightOfItem = new ArrayList<>();
         rightOfItem.add(firstSymbol);
+        rightOfItem.add(END_OF_LINE_SYMBOL);
 
         return new Item(newNameForFirstSymbol, rightOfItem, Item.ItemType.NEW_ITEM);
     }
@@ -115,11 +116,14 @@ public class LR0Grammar extends Grammar {
         }
     }
 
-    private void createEmptyParsingTable() {
-        for(int i=0; i<this.stateIndexing.size(); i++) {
-            Map<String, LR0ParseTableElement> map = new HashMap<>();
-            this.parseTable.add(map);
+    private State getStateFromIndex(int ind) {
+        for(Map.Entry<State, Integer> mapElement: this.stateIndexing.entrySet()) {
+            if(ind == mapElement.getValue()) {
+                return mapElement.getKey();
+            }
         }
+
+        return null;
     }
 
     // for reducing
@@ -129,11 +133,23 @@ public class LR0Grammar extends Grammar {
 
     // for shifting and goto
     private void addToParseTable(int stateNumber, int shiftStateNumber, String transitionString, LR0ParseTableElement.ElementType elementType) {
-        this.parseTable.get(stateNumber).put(transitionString, new LR0ParseTableElement(elementType, stateNumber));
+        this.parseTable.get(stateNumber).put(transitionString, new LR0ParseTableElement(elementType, shiftStateNumber));
+    }
+
+    //for accepting
+    private void addToParseTable(int stateNumber, String transitionString) {
+        this.parseTable.get(stateNumber).put(transitionString, new LR0ParseTableElement(LR0ParseTableElement.ElementType.ACCEPT));
     }
 
     private boolean parseTableIsNonEmptyForStateAndTransitionString(int stateNumber, String transitionString) {
         return this.parseTable.get(stateNumber).containsKey(transitionString);
+    }
+
+    private void createEmptyParsingTable() {
+        for(int i=0; i<this.stateIndexing.size(); i++) {
+            Map<String, LR0ParseTableElement> map = new HashMap<>();
+            this.parseTable.add(map);
+        }
     }
 
     public void computeParsingTable() {
@@ -144,9 +160,21 @@ public class LR0Grammar extends Grammar {
 
         this.createEmptyParsingTable();
 
-        for(Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
-            State fromState = mapElem.getKey();
-            int fromStateInt = this.stateIndexing.get(fromState);
+        for(int i=0; i<this.stateIndexing.size(); i++) {
+            State fromState = getStateFromIndex(i);
+            assert fromState != null;
+            int fromStateInt = i;
+
+            //check if the fromState is an accepting state
+            if(fromState.isAcceptingState()) {
+                //for all terminal symbols, accepting
+                for(String terminal: super.getTerminalSymbols()) {
+                    this.addToParseTable(fromStateInt, terminal);
+                }
+
+                continue;
+            }
+
 
             //check if the fromState is a reducing state
             if(fromState.isReducingState()) {
@@ -166,9 +194,11 @@ public class LR0Grammar extends Grammar {
                 for(String terminal: super.getTerminalSymbols()) {
                     this.addToParseTable(fromStateInt, productionRuleForItem, terminal);
                 }
+
+                continue;
             }
 
-            for(Map.Entry<String, State> mapValueElem: mapElem.getValue().entrySet()) {
+            for(Map.Entry<String, State> mapValueElem: this.transitions.get(fromState).entrySet()) {
                 String transitionString = mapValueElem.getKey();
                 int toStateInt = this.stateIndexing.get(mapValueElem.getValue());
 
@@ -229,14 +259,39 @@ public class LR0Grammar extends Grammar {
     private int findLengthOfMaxTableElement() {
         int maxLength = Integer.MIN_VALUE;
 
-        for(int i=0; i<this.parseTable.size(); i++) {
-            Map<String, LR0ParseTableElement> map = this.parseTable.get(i);
-
-            for(LR0ParseTableElement element : map.values()) {
+        for (Map<String, LR0ParseTableElement> map : this.parseTable) {
+            for (LR0ParseTableElement element : map.values()) {
                 maxLength = Math.max(maxLength, element.toString().length());
             }
         }
         return maxLength;
+    }
+
+    public void printParsingTable() {
+        System.out.println("This is the parsing table: ");
+
+        int lengthOfMaxTableElement = this.findLengthOfMaxTableElement() + 5;
+
+        //print headers
+//        System.out.print("State");
+
+        List<String> headerSymbols = new ArrayList<>(super.getTerminalSymbols());
+        headerSymbols.addAll(super.getNonTerminalSymbols());
+
+        for(String symbol: headerSymbols) {
+            System.out.format("%" + lengthOfMaxTableElement + "s", symbol);
+        }
+        System.out.println();
+
+        for(int i=0; i<this.parseTable.size(); i++) {
+            Map<String, LR0ParseTableElement> map = this.parseTable.get(i);
+            System.out.print(i);
+            for(String symbol: headerSymbols) {
+                System.out.format("%" + lengthOfMaxTableElement + "s", this.parseTable.get(i).get(symbol));
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     //for testing
@@ -244,18 +299,34 @@ public class LR0Grammar extends Grammar {
         LR0Grammar grammar = new LR0Grammar();
         grammar.setFirstSymbol("E");
         grammar.addTerminalSymbol("+");
-        grammar.addTerminalSymbol("*");
+        grammar.addTerminalSymbol("-");
         grammar.addTerminalSymbol("(");
         grammar.addTerminalSymbol(")");
         grammar.addTerminalSymbol("id");
 
         grammar.addNonTerminalSymbol("E");
         grammar.addNonTerminalSymbol("T");
-        grammar.addNonTerminalSymbol("F");
 
-        grammar.addRule("E -> E + T | T");
-        grammar.addRule("T -> T * F | F");
-        grammar.addRule("F -> ( E ) | id");
+        grammar.addRule("E -> E + T | E - T | T");
+        grammar.addRule("T -> ( E ) | id");
+
+//        grammar.setFirstSymbol("Goal");
+//        grammar.addTerminalSymbol("+");
+//        grammar.addTerminalSymbol("-");
+//        grammar.addTerminalSymbol("/");
+//        grammar.addTerminalSymbol("*");
+//        grammar.addTerminalSymbol("id");
+//        grammar.addTerminalSymbol("number");
+//
+//        grammar.addNonTerminalSymbol("Goal");
+//        grammar.addNonTerminalSymbol("Expr");
+//        grammar.addNonTerminalSymbol("Term");
+//        grammar.addNonTerminalSymbol("Factor");
+//
+//        grammar.addRule("Goal -> Expr");
+//        grammar.addRule("Expr -> Expr + Term | Expr - Term | Term");
+//        grammar.addRule("Term -> Term * Factor | Term / Factor | Factor");
+//        grammar.addRule("Factor -> number | id");
 
         grammar.printGrammar();
 
@@ -263,6 +334,8 @@ public class LR0Grammar extends Grammar {
         grammar.computeIndexingOfStates();
         grammar.printIndexingOfStates();
         grammar.printTransitions();
-//        grammar.printParsingTable();
+
+        grammar.computeParsingTable();
+        grammar.printParsingTable();
     }
 }

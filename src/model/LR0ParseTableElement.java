@@ -2,12 +2,17 @@ package model;
 
 public class LR0ParseTableElement {
     public enum ElementType {
-        SHIFT, REDUCE, GOTO
+        SHIFT, REDUCE, GOTO, ACCEPT
     }
 
     private final ElementType elementType;
     private int stateNumber;
     private ProductionRule reductionProductionRule;
+
+    public LR0ParseTableElement(ElementType elementType) {
+        assert elementType == ElementType.ACCEPT;
+        this.elementType = elementType;
+    }
 
     public LR0ParseTableElement(ElementType elementType, int stateNumber) {
         this.elementType = elementType;
@@ -28,6 +33,8 @@ public class LR0ParseTableElement {
             return "S: " + stateNumber;
         } else if(elementType == ElementType.GOTO) {
             return "GOTO: " + stateNumber;
+        } else if(elementType == ElementType.ACCEPT) {
+            return "Accept";
         }
         return "NULL";
     }
