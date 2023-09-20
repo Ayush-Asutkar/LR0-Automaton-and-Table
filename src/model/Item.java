@@ -2,13 +2,14 @@ package model;
 
 import java.util.*;
 
+import static constants.StringConstants.DOTMARKER;
+import static constants.StringConstants.END_OF_LINE_SYMBOL;
+
 public class Item {
     public enum ItemType {
         NEW_ITEM, DERIVED_ITEM
     }
 
-    private final static String DOTMARKER = String.valueOf('\u2022');
-    private static final String END_OF_LINE_SYMBOL = "$";
     private final String leftSide;
     private final List<String> rightSide;
 

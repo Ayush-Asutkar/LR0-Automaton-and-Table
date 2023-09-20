@@ -7,9 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static constants.StringConstants.END_OF_LINE_SYMBOL;
+import static constants.StringConstants.EPSILON;
+
 public class Grammar {
-    protected static final String EPSILON = String.valueOf('\u03B5');
-    protected static final String END_OF_LINE_SYMBOL = "$";
 
     private String firstSymbol;
     private final List<ProductionRule> productionRules;

@@ -7,6 +7,8 @@ import model.State;
 
 import java.util.*;
 
+import static constants.StringConstants.END_OF_LINE_SYMBOL;
+
 public class LR0Grammar extends Grammar {
     /**
      * Map(State, Map(Symbol, State))

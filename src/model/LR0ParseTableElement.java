@@ -28,9 +28,9 @@ public class LR0ParseTableElement {
     public String toString() {
         if(elementType == ElementType.REDUCE) {
             assert reductionProductionRule != null;
-            return "R: " + reductionProductionRule;
+            return "Reduce: " + reductionProductionRule;
         } else if(elementType == ElementType.SHIFT) {
-            return "S: " + stateNumber;
+            return "Shift: " + stateNumber;
         } else if(elementType == ElementType.GOTO) {
             return "GOTO: " + stateNumber;
         } else if(elementType == ElementType.ACCEPT) {
