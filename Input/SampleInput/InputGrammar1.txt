@@ -1,6 +1,8 @@
-S
-S B A
-n + *
-S -> n B
-B -> n B A B | ε
-A -> + | *
+D
+D T L
+id : ; , var integer real
+D -> var L : T ;
+T -> integer
+T -> real
+L -> L , id
+L -> id
