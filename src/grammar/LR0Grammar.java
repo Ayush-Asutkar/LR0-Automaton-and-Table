@@ -5,6 +5,9 @@ import model.LR0ParseTableElement;
 import model.ProductionRule;
 import model.State;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import static constants.StringConstants.END_OF_LINE_SYMBOL;
@@ -234,6 +237,22 @@ public class LR0Grammar extends Grammar {
         }
     }
 
+    public void printIndexingOfStatesToFile(String path) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        if(this.stateIndexing.isEmpty()) {
+            writer.write("Compute the indexing before running this function");
+            System.exit(-1);
+        }
+
+        writer.write("Total States: " + this.stateIndexing.size() + "\n");
+        writer.write("Indexing of maps:\n");
+        for(Map.Entry<State, Integer> mapElem: this.stateIndexing.entrySet()) {
+            writer.write(mapElem.getValue() + " :-\n" + mapElem.getKey() + "\n");
+        }
+        writer.write("\n");
+        writer.close();
+    }
+
     public void printTransitions() {
         if(this.stateIndexing.isEmpty()) {
             System.out.println("Compute the indexing before running this function");
@@ -258,6 +277,33 @@ public class LR0Grammar extends Grammar {
         System.out.println();
     }
 
+    public void printTransitionsToFile(String path) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+
+        if(this.stateIndexing.isEmpty()) {
+            writer.write("Compute the indexing before running this function");
+            System.exit(-1);
+        }
+
+        writer.write("Following are the transitions:\n");
+
+        for (Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
+            int fromState = this.stateIndexing.get(mapElem.getKey());
+            Map<String, State> mapValues = mapElem.getValue();
+
+            for(Map.Entry<String, State> transitionState: mapValues.entrySet()) {
+                String transitionString = transitionState.getKey();
+                int toState = this.stateIndexing.get(transitionState.getValue());
+
+                writer.write("From State: " + fromState + "\n");
+                writer.write("Transition String: " + transitionString + "\n");
+                writer.write("To State: " + toState + "\n");
+                writer.write("\n");
+            }
+        }
+        writer.close();
+    }
+
     private int findLengthOfMaxTableElement() {
         int maxLength = Integer.MIN_VALUE;
 
@@ -275,7 +321,6 @@ public class LR0Grammar extends Grammar {
         int lengthOfMaxTableElement = this.findLengthOfMaxTableElement() + 5;
 
         //print headers
-//        System.out.print("State");
 
         List<String> headerSymbols = new ArrayList<>(super.getTerminalSymbols());
         headerSymbols.addAll(super.getNonTerminalSymbols());
@@ -294,6 +339,35 @@ public class LR0Grammar extends Grammar {
             System.out.println();
         }
         System.out.println();
+    }
+
+    public void printParsingTableToFile(String path) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        writer.write("This is the parsing table:\n");
+
+        int lengthOfMaxTableElement = this.findLengthOfMaxTableElement() + 5;
+
+        //print headers
+
+        List<String> headerSymbols = new ArrayList<>(super.getTerminalSymbols());
+        headerSymbols.addAll(super.getNonTerminalSymbols());
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for(String symbol: headerSymbols) {
+            stringBuilder.append(String.format("%" + lengthOfMaxTableElement + "s", symbol));
+        }
+        stringBuilder.append("\n");
+
+        for(int i=0; i<this.parseTable.size(); i++) {
+            Map<String, LR0ParseTableElement> map = this.parseTable.get(i);
+            stringBuilder.append(i);
+            for(String symbol: headerSymbols) {
+                stringBuilder.append(String.format("%" + lengthOfMaxTableElement + "s", this.parseTable.get(i).get(symbol)));
+            }
+            stringBuilder.append("\n");
+        }
+        writer.write(stringBuilder.toString());
+        writer.close();
     }
 
     //for testing
