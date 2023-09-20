@@ -22,9 +22,23 @@ public class State {
         return Collections.unmodifiableSet(items);
     }
 
+    public boolean isAcceptingState() {
+        if(isReducingState()) {
+            Set<Item> itemsWhichAreReducing = this.getItemsWhichAreReducingItems();
+            if(itemsWhichAreReducing.size() > 1) {
+                return false;
+            }
+            Iterator<Item> iterator = itemsWhichAreReducing.iterator();
+            Item item = iterator.next();
+
+            return item.isAcceptingItem();
+        }
+        return false;
+    }
+
     public boolean isReducingState() {
         Set<Item> reductionItems = this.getItemsWhichAreReducingItems();
-        return reductionItems.isEmpty();
+        return !reductionItems.isEmpty();
     }
 
     public Set<Item> getItemsWhichAreReducingItems() {
@@ -64,13 +78,44 @@ public class State {
     //for testing
     public static void main(String[] args) {
         String DOTMARKER = String.valueOf('\u2022');
-
+        String END_OF_LINE_SYMBOL = "$";
         Grammar grammar = new Grammar();
-        grammar.addRule("E' -> E");
-        grammar.addRule("E -> E + T | T");
-        grammar.addRule("T -> T * F | F");
-        grammar.addRule("F -> ( E ) | id");
-        grammar.printGrammar();
+        grammar.setFirstSymbol("E");
+        grammar.addTerminalSymbol("+");
+        grammar.addTerminalSymbol("-");
+        grammar.addTerminalSymbol("(");
+        grammar.addTerminalSymbol(")");
+        grammar.addTerminalSymbol("id");
+
+        grammar.addNonTerminalSymbol("E");
+        grammar.addNonTerminalSymbol("T");
+
+        grammar.addRule("E -> E + T | E - T | T");
+        grammar.addRule("T -> ( E ) | id");
+
+        List<String> right = new ArrayList<>();
+        right.add("E");
+        right.add("+");
+        right.add("T");
+        right.add(DOTMARKER);
+        Item item = new Item("S", right, Item.ItemType.DERIVED_ITEM);
+
+        Set<Item> set = new HashSet<>();
+        set.add(item);
+
+        State state = new State(set, grammar.getProductionRules());
+        System.out.println(state);
+
+        System.out.println(state.isAcceptingState());
+        System.out.println(state.isReducingState());
+
+
+//        Grammar grammar = new Grammar();
+//        grammar.addRule("E' -> E");
+//        grammar.addRule("E -> E + T | T");
+//        grammar.addRule("T -> T * F | F");
+//        grammar.addRule("F -> ( E ) | id");
+//        grammar.printGrammar();
 
 //        List<String> right = new ArrayList<>();
 //        right.add("E");
@@ -84,29 +129,29 @@ public class State {
 //        State state = new State(initialItemSet, grammar.getProductionRules());
 //        System.out.println(state);
 
-        List<String> right = new ArrayList<>();
-        right.add("(");
-        right.add(DOTMARKER);
-        right.add("E");
-        right.add(")");
-        Item item = new Item("F", right, Item.ItemType.DERIVED_ITEM);
+//        List<String> right = new ArrayList<>();
+//        right.add("(");
+//        right.add(DOTMARKER);
+//        right.add("E");
+//        right.add(")");
+//        Item item = new Item("F", right, Item.ItemType.DERIVED_ITEM);
+//
+//        System.out.println("item: " + item);
 
-        System.out.println("item: " + item);
-
-        Set<Item> initialItemSet = new HashSet<>();
-        initialItemSet.add(item);
-
-        State state1 = new State(initialItemSet, grammar.getProductionRules());
-        System.out.println(state1);
-
-        State state2 = new State(initialItemSet, grammar.getProductionRules());
-        System.out.println(state2);
-
-        System.out.println(state1 == state2);
-
-        Set<State> states = new HashSet<>();
-        states.add(state1);
-        states.add(state2);
-        System.out.println("states.size(): " + states.size());
+//        Set<Item> initialItemSet = new HashSet<>();
+//        initialItemSet.add(item);
+//
+//        State state1 = new State(initialItemSet, grammar.getProductionRules());
+//        System.out.println(state1);
+//
+//        State state2 = new State(initialItemSet, grammar.getProductionRules());
+//        System.out.println(state2);
+//
+//        System.out.println(state1 == state2);
+//
+//        Set<State> states = new HashSet<>();
+//        states.add(state1);
+//        states.add(state2);
+//        System.out.println("states.size(): " + states.size());
     }
 }

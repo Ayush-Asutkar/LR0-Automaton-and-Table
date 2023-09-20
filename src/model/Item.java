@@ -1,7 +1,5 @@
 package model;
 
-import grammar.Grammar;
-
 import java.util.*;
 
 public class Item {
@@ -10,6 +8,7 @@ public class Item {
     }
 
     private final static String DOTMARKER = String.valueOf('\u2022');
+    private static final String END_OF_LINE_SYMBOL = "$";
     private final String leftSide;
     private final List<String> rightSide;
 
@@ -22,7 +21,21 @@ public class Item {
     }
 
     public boolean isReductionItem() {
-        return rightSide.indexOf(DOTMARKER) == (rightSide.size() - 1);
+        if(!rightSide.isEmpty()) {
+            return rightSide.get(rightSide.size() - 1).equals(DOTMARKER);
+        }
+        return false;
+    }
+
+    public boolean isAcceptingItem() {
+        if(isReductionItem()) {
+            if(this.rightSide.size() > 2) {
+                String secondLastSymbol = this.rightSide.get(this.rightSide.size() - 2);
+                return secondLastSymbol.equals(END_OF_LINE_SYMBOL);
+            }
+        }
+
+        return false;
     }
 
     public String getSymbolNextOfDotMarker() {
@@ -112,6 +125,18 @@ public class Item {
 
     //testing
     public static void main(String[] args) {
+
+        List<String> rightSide = new ArrayList<>();
+        rightSide.add("E");
+        rightSide.add(END_OF_LINE_SYMBOL);
+//        rightSide.add(DOTMARKER);
+        rightSide.add("G");
+        Item item = new Item("E'", rightSide, ItemType.DERIVED_ITEM);
+
+        System.out.println(item.isAcceptingItem());
+        System.out.println(item.isReductionItem());
+
+
 //        List<String> rightSide = new ArrayList<>();
 //        rightSide.add("S");
 //        rightSide.add("a");
@@ -131,12 +156,12 @@ public class Item {
 //        System.out.println("newItem2: " + newItem2);
 //        System.out.println("newItem2.symbolNextOfDotMarker(): " + newItem2.symbolNextOfDotMarker());
 
-        Grammar grammar = new Grammar();
-        grammar.addRule("E' -> E");
-        grammar.addRule("E -> E + T | T");
-        grammar.addRule("T -> T * F | F");
-        grammar.addRule("F -> ( E ) | id");
-        grammar.printGrammar();
+//        Grammar grammar = new Grammar();
+//        grammar.addRule("E' -> E");
+//        grammar.addRule("E -> E + T | T");
+//        grammar.addRule("T -> T * F | F");
+//        grammar.addRule("F -> ( E ) | id");
+//        grammar.printGrammar();
 
 //        List<String> right = new ArrayList<>();
 //        right.add("E");
@@ -147,16 +172,16 @@ public class Item {
 //        Set<Item> closure =  item.closure(grammar.getProductionRules());
 //        closure.forEach(System.out::println);
 
-        List<String> right = new ArrayList<>();
-        right.add("(");
-        right.add(DOTMARKER);
-        right.add("E");
-        right.add(")");
-        Item item = new Item("F", right, ItemType.DERIVED_ITEM);
-
-        System.out.println("item: " + item);
-
-        Set<Item> closure =  item.closure(grammar.getProductionRules());
-        closure.forEach(System.out::println);
+//        List<String> right = new ArrayList<>();
+//        right.add("(");
+//        right.add(DOTMARKER);
+//        right.add("E");
+//        right.add(")");
+//        Item item = new Item("F", right, ItemType.DERIVED_ITEM);
+//
+//        System.out.println("item: " + item);
+//
+//        Set<Item> closure =  item.closure(grammar.getProductionRules());
+//        closure.forEach(System.out::println);
     }
 }
