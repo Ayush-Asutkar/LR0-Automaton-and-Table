@@ -49,7 +49,9 @@ public class Item {
 
     public ProductionRule getCorrespondingProductionRuleForReducingItem() {
         ProductionRule productionRule = new ProductionRule(this.leftSide);
-        productionRule.addRightHandSide(this.rightSide);
+        List<String> right = new ArrayList<>(this.rightSide);
+        right.remove(DOTMARKER);
+        productionRule.addRightHandSide(right);
         return productionRule;
     }
 
