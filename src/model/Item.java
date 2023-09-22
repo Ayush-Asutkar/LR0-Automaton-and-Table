@@ -1,5 +1,7 @@
 package model;
 
+import constants.StringConstants;
+
 import java.util.*;
 
 import static constants.StringConstants.DOTMARKER;
@@ -16,6 +18,10 @@ public class Item {
     public Item(String left, List<String> rightSide, ItemType itemType) {
         this.leftSide = left;
         this.rightSide = new ArrayList<>(rightSide);
+
+        //remove epsilon on the right side
+        this.rightSide.remove(StringConstants.EPSILON);
+
         if(itemType == ItemType.NEW_ITEM) {
             this.rightSide.add(0, DOTMARKER);
         }
