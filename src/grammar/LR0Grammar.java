@@ -232,8 +232,8 @@ public class LR0Grammar extends Grammar {
 
         System.out.println("Total States: " + this.stateIndexing.size());
         System.out.println("Indexing of maps:");
-        for(Map.Entry<State, Integer> mapElem: this.stateIndexing.entrySet()) {
-            System.out.println(mapElem.getValue() + " :-\n" + mapElem.getKey());
+        for(int i=0; i<this.stateIndexing.size(); i++) {
+            System.out.println(i + " :-\n" + this.getStateFromIndex(i));
         }
     }
 
@@ -246,10 +246,9 @@ public class LR0Grammar extends Grammar {
 
         writer.write("Total States: " + this.stateIndexing.size() + "\n");
         writer.write("Indexing of maps:\n");
-        for(Map.Entry<State, Integer> mapElem: this.stateIndexing.entrySet()) {
-            writer.write(mapElem.getValue() + " :-\n" + mapElem.getKey() + "\n");
+        for(int i=0; i<this.stateIndexing.size(); i++) {
+            writer.write(i + " :-\n" + this.getStateFromIndex(i) + "\n");
         }
-        writer.write("\n");
         writer.close();
     }
 
@@ -259,17 +258,23 @@ public class LR0Grammar extends Grammar {
             System.exit(-1);
         }
 
-        for (Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
-            int fromState = this.stateIndexing.get(mapElem.getKey());
-            Map<String, State> mapValues = mapElem.getValue();
+        System.out.println("\nFollowing are the transitions:\n");
+
+        for (int fromStateInt=0; fromStateInt<this.stateIndexing.size(); fromStateInt++) {
+            State fromState = this.getStateFromIndex(fromStateInt);
+            Map<String, State> mapValues = this.transitions.get(fromState);
+
+            if(mapValues == null) {
+                continue;
+            }
 
             for(Map.Entry<String, State> transitionState: mapValues.entrySet()) {
                 String transitionString = transitionState.getKey();
-                int toState = this.stateIndexing.get(transitionState.getValue());
+                int toStateInt = this.stateIndexing.get(transitionState.getValue());
 
-                System.out.println("From State: " + fromState);
+                System.out.println("From State: " + fromStateInt);
                 System.out.println("Transition String: " + transitionString);
-                System.out.println("To State: " + toState);
+                System.out.println("To State: " + toStateInt);
                 System.out.println();
             }
         }
@@ -287,17 +292,21 @@ public class LR0Grammar extends Grammar {
 
         writer.write("Following are the transitions:\n");
 
-        for (Map.Entry<State, Map<String, State>> mapElem: this.transitions.entrySet()) {
-            int fromState = this.stateIndexing.get(mapElem.getKey());
-            Map<String, State> mapValues = mapElem.getValue();
+        for (int fromStateInt=0; fromStateInt<this.stateIndexing.size(); fromStateInt++) {
+            State fromState = this.getStateFromIndex(fromStateInt);
+            Map<String, State> mapValues = this.transitions.get(fromState);
+
+            if(mapValues == null) {
+                continue;
+            }
 
             for(Map.Entry<String, State> transitionState: mapValues.entrySet()) {
                 String transitionString = transitionState.getKey();
-                int toState = this.stateIndexing.get(transitionState.getValue());
+                int toStateInt = this.stateIndexing.get(transitionState.getValue());
 
-                writer.write("From State: " + fromState + "\n");
+                writer.write("From State: " + fromStateInt + "\n");
                 writer.write("Transition String: " + transitionString + "\n");
-                writer.write("To State: " + toState + "\n");
+                writer.write("To State: " + toStateInt + "\n");
                 writer.write("\n");
             }
         }
